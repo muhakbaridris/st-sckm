@@ -1,0 +1,1927 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SCKM & ST-SCKM Advanced Visualization with Export</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        :root {
+            --primary: #1a2980;
+            --secondary: #26d0ce;
+            --accent1: #FF6B6B;
+            --accent2: #4ECDC4;
+            --accent3: #FFD166;
+            --light: #f5f7fa;
+            --dark: #2d3748;
+            --gray: #718096;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4edf5 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+            background-size: 20px 20px;
+            opacity: 0.2;
+        }
+        
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 15px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .subtitle {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            max-width: 900px;
+            margin: 0 auto 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header-badge {
+            display: inline-block;
+            background-color: rgba(255, 255, 255, 0.2);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+            backdrop-filter: blur(5px);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+        
+        @media (max-width: 1100px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .card {
+            background-color: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            padding: 25px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--light);
+        }
+        
+        .card-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #15246d;
+            box-shadow: 0 5px 15px rgba(26, 41, 128, 0.2);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #20b8b6;
+            box-shadow: 0 5px 15px rgba(38, 208, 206, 0.2);
+        }
+        
+        .btn-accent {
+            background-color: var(--accent1);
+            color: white;
+        }
+        
+        .btn-accent:hover {
+            background-color: #ff5252;
+            box-shadow: 0 5px 15px rgba(255, 107, 107, 0.2);
+        }
+        
+        .btn-outline {
+            background-color: transparent;
+            color: var(--primary);
+            border: 2px solid var(--primary);
+        }
+        
+        .btn-outline:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+        
+        .canvas-container {
+            margin-bottom: 20px;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #f9fafc;
+        }
+        
+        .canvas-wrapper {
+            position: relative;
+            margin: 0 auto;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        
+        canvas {
+            display: block;
+            background-color: white;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            justify-content: center;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background-color: rgba(0, 0, 0, 0.02);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+        }
+        
+        .algorithm-steps {
+            margin-top: 25px;
+        }
+        
+        .step {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 15px;
+            padding: 15px;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.02);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .step-number {
+            background-color: var(--primary);
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-right: 15px;
+            flex-shrink: 0;
+        }
+        
+        .step-content h4 {
+            margin-bottom: 5px;
+            color: var(--dark);
+        }
+        
+        .step-content p {
+            color: var(--gray);
+            font-size: 0.95rem;
+        }
+        
+        .formula-card {
+            background-color: #f0f7ff;
+            border-left: 5px solid var(--primary);
+            padding: 20px;
+            border-radius: 0 10px 10px 0;
+            margin: 25px 0;
+        }
+        
+        .formula {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem;
+            color: var(--dark);
+            margin: 10px 0;
+            text-align: center;
+            padding: 15px;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 8px;
+            overflow-x: auto;
+        }
+        
+        .formula-variables {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .variable {
+            padding: 8px 12px;
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 6px;
+            font-size: 0.9rem;
+        }
+        
+        .param-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 20px;
+            padding: 20px;
+            background-color: rgba(0, 0, 0, 0.02);
+            border-radius: 10px;
+        }
+        
+        .param-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            min-width: 150px;
+        }
+        
+        .param-label {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+        
+        .param-value {
+            font-weight: bold;
+            color: var(--secondary);
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background-color: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            cursor: pointer;
+        }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .comparison-card {
+            padding: 25px;
+            border-radius: 15px;
+            background-color: white;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
+            border-top: 5px solid var(--secondary);
+        }
+        
+        .comparison-title {
+            font-size: 1.3rem;
+            color: var(--primary);
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .comparison-list {
+            list-style-type: none;
+        }
+        
+        .comparison-list li {
+            padding: 8px 0;
+            border-bottom: 1px dashed #e2e8f0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .comparison-list li:before {
+            content: "✓";
+            color: var(--secondary);
+            font-weight: bold;
+            margin-right: 10px;
+        }
+        
+        .export-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s;
+        }
+        
+        .export-modal.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            color: var(--primary);
+        }
+        
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray);
+        }
+        
+        .export-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .export-option {
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #f8fafc;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 2px solid transparent;
+        }
+        
+        .export-option:hover {
+            background-color: #edf2f7;
+            border-color: var(--primary);
+        }
+        
+        .export-option i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+        
+        .progress-container {
+            margin-top: 20px;
+            background-color: #f1f1f1;
+            border-radius: 10px;
+            overflow: hidden;
+            height: 10px;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            width: 0%;
+            transition: width 0.5s;
+        }
+        
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        footer {
+            text-align: center;
+            padding: 25px;
+            background-color: #f8fafc;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 30px;
+        }
+        
+        .tooltip {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 200px;
+            background-color: var(--dark);
+            color: white;
+            text-align: center;
+            border-radius: 6px;
+            padding: 10px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -100px;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 0.9rem;
+            font-weight: normal;
+        }
+        
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .time-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .time-label {
+            font-weight: bold;
+            color: var(--primary);
+            min-width: 60px;
+        }
+        
+        .statistics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .stat-card {
+            background-color: #f8fafc;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .algorithm-progress {
+            margin-top: 20px;
+        }
+        
+        .progress-step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .step-indicator {
+            width: 25px;
+            height: 25px;
+            border-radius: 50%;
+            background-color: #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .step-indicator.active {
+            background-color: var(--secondary);
+            color: white;
+        }
+        
+        .step-indicator.completed {
+            background-color: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-project-diagram"></i> SCKM & ST-SCKM Visualization</h1>
+            <p class="subtitle">Visualisasi Interaktif Algoritma Spatially Constrained K-Means dan Spatio-Temporal SCKM dengan Kemampuan Export Gambar Berkualitas Tinggi</p>
+            <div class="header-badge">
+                <i class="fas fa-download"></i> Dukung Export PNG, JPG, dan PDF
+            </div>
+        </header>
+        
+        <div class="dashboard">
+            <!-- Card 1: SCKM Visualization -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-map-marked-alt"></i> SCKM Visualization</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" id="export-sckm">
+                            <i class="fas fa-camera"></i> Export
+                        </button>
+                        <button class="btn btn-secondary" id="run-sckm">
+                            <i class="fas fa-play"></i> Run
+                        </button>
+                        <button class="btn btn-outline" id="reset-sckm">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="canvas-container" id="sckm-canvas-container">
+                    <div class="canvas-wrapper">
+                        <canvas id="sckm-canvas" width="600" height="400"></canvas>
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #FF6B6B;"></div>
+                        <span>Core Points (MinPts ≥ 5)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #4ECDC4;"></div>
+                        <span>Border Points</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #FFD166;"></div>
+                        <span>Noise Points</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #1A2980;"></div>
+                        <span>Centroid</span>
+                    </div>
+                </div>
+                
+                <div class="algorithm-progress">
+                    <div class="progress-step">
+                        <div class="step-indicator completed" id="step1">1</div>
+                        <span>Inisialisasi Centroid</span>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-indicator active" id="step2">2</div>
+                        <span>Penugasan Titik dengan Batasan Spasial</span>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-indicator" id="step3">3</div>
+                        <span>Pembaruan Centroid</span>
+                    </div>
+                    <div class="progress-step">
+                        <div class="step-indicator" id="step4">4</div>
+                        <span>Iterasi Hingga Konvergen</span>
+                    </div>
+                </div>
+                
+                <div class="param-controls">
+                    <div class="param-group">
+                        <div class="param-label">Jumlah Klaster (k): <span class="param-value" id="k-value">3</span></div>
+                        <input type="range" id="k-slider" min="2" max="6" value="3" step="1">
+                    </div>
+                    <div class="param-group">
+                        <div class="param-label">MinPts: <span class="param-value" id="minpts-value">5</span></div>
+                        <input type="range" id="minpts-slider" min="3" max="10" value="5" step="1">
+                    </div>
+                    <div class="param-group">
+                        <div class="param-label">Jarak Spasial (ε): <span class="param-value" id="epsilon-value">120</span></div>
+                        <input type="range" id="epsilon-slider" min="50" max="200" value="120" step="10">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 2: ST-SCKM Visualization -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-clock"></i> ST-SCKM Visualization</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" id="export-st">
+                            <i class="fas fa-camera"></i> Export
+                        </button>
+                        <button class="btn btn-secondary" id="run-st">
+                            <i class="fas fa-play"></i> Run
+                        </button>
+                        <button class="btn btn-outline" id="reset-st">
+                            <i class="fas fa-redo"></i> Reset
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="canvas-container" id="st-canvas-container">
+                    <div class="canvas-wrapper">
+                        <canvas id="st-canvas" width="600" height="400"></canvas>
+                    </div>
+                </div>
+                
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #FF6B6B;"></div>
+                        <span>Klaster 1 (t=1)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #4ECDC4;"></div>
+                        <span>Klaster 2 (t=2)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #FFD166;"></div>
+                        <span>Klaster 3 (t=3)</span>
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: #1A2980;"></div>
+                        <span>Centroid (bergerak)</span>
+                    </div>
+                </div>
+                
+                <div class="time-slider-container">
+                    <div class="time-label">Waktu: t = <span id="time-value">1</span></div>
+                    <input type="range" id="time-slider" min="1" max="3" value="1" step="1" style="flex-grow: 1;">
+                    <button class="btn btn-outline" id="animate-time">
+                        <i class="fas fa-film"></i> Animate
+                    </button>
+                </div>
+                
+                <div class="statistics">
+                    <div class="stat-card">
+                        <div class="stat-value" id="st-points">0</div>
+                        <div class="stat-label">Total Points</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="st-clusters">3</div>
+                        <div class="stat-label">Klaster</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="st-time">3</div>
+                        <div class="stat-label">Time Steps</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="st-convergence">0%</div>
+                        <div class="stat-label">Konvergensi</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 3: Formula & Explanation -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-calculator"></i> Rumus & Penjelasan</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" id="export-formula">
+                            <i class="fas fa-file-export"></i> Export
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="tabs">
+                    <div class="formula-card">
+                        <h3><i class="fas fa-square-root-alt"></i> Rumus SCKM</h3>
+                        <div class="formula">
+                            J<sub>SCKM</sub> = Σ<sub>i=1</sub><sup>n</sup> Σ<sub>j=1</sub><sup>k</sup> w<sub>ij</sub> ||x<sub>i</sub> - c<sub>j</sub>||² + λ Σ<sub>i=1</sub><sup>n</sup> Σ<sub>j=1</sub><sup>k</sup> φ(d<sub>ij</sub>)
+                        </div>
+                        
+                        <div class="formula-variables">
+                            <div class="variable">
+                                <strong>w<sub>ij</sub></strong>: Indikator keanggotaan titik i ke klaster j
+                            </div>
+                            <div class="variable">
+                                <strong>x<sub>i</sub></strong>: Vektor fitur titik data ke-i
+                            </div>
+                            <div class="variable">
+                                <strong>c<sub>j</sub></strong>: Centroid klaster ke-j
+                            </div>
+                            <div class="variable">
+                                <strong>λ</strong>: Parameter penyeimbang (balancing parameter)
+                            </div>
+                            <div class="variable">
+                                <strong>φ(d<sub>ij</sub>)</strong>: Fungsi batasan spasial berdasarkan jarak
+                            </div>
+                            <div class="variable">
+                                <strong>d<sub>ij</sub></strong>: Jarak spasial antara titik i dan centroid j
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="formula-card" style="margin-top: 20px;">
+                        <h3><i class="fas fa-clock"></i> Rumus ST-SCKM</h3>
+                        <div class="formula">
+                            J<sub>ST-SCKM</sub> = Σ<sub>t=1</sub><sup>T</sup> Σ<sub>i=1</sub><sup>n</sup> Σ<sub>j=1</sub><sup>k</sup> w<sub>ijt</sub> (||x<sub>it</sub> - c<sub>jt</sub>||² + α||t - t<sub>j</sub>||²) + λ Σ φ<sub>ijt</sub>
+                        </div>
+                        
+                        <div class="formula-variables">
+                            <div class="variable">
+                                <strong>t</strong>: Indeks waktu (time step)
+                            </div>
+                            <div class="variable">
+                                <strong>T</strong>: Total periode waktu
+                            </div>
+                            <div class="variable">
+                                <strong>x<sub>it</sub></strong>: Titik data i pada waktu t
+                            </div>
+                            <div class="variable">
+                                <strong>c<sub>jt</sub></strong>: Centroid klaster j pada waktu t
+                            </div>
+                            <div class="variable">
+                                <strong>α</strong>: Parameter temporal (temporal weight)
+                            </div>
+                            <div class="variable">
+                                <strong>t<sub>j</sub></strong>: Waktu referensi untuk klaster j
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="algorithm-steps">
+                    <h3 style="margin-top: 25px; margin-bottom: 15px;"><i class="fas fa-list-ol"></i> Langkah Algoritma SCKM:</h3>
+                    
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Inisialisasi Parameter</h4>
+                            <p>Tentukan jumlah klaster (k), MinPts, dan batasan jarak spasial (ε). Pilih posisi awal centroid secara acak.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Identifikasi Core Points</h4>
+                            <p>Identifikasi titik inti (core points) yang memiliki setidaknya MinPts titik dalam radius ε.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Penugasan Titik dengan Batasan Spasial</h4>
+                            <p>Setiap titik ditugaskan ke centroid terdekat yang masih dalam batasan jarak ε. Titik di luar batasan ditandai sebagai noise.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Pembaruan Centroid</h4>
+                            <p>Posisi centroid diperbarui berdasarkan rata-rata titik-titik dalam klaster.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="step">
+                        <div class="step-number">5</div>
+                        <div class="step-content">
+                            <h4>Iterasi Hingga Konvergen</h4>
+                            <p>Ulangi langkah 3 dan 4 hingga tidak ada perubahan penugasan titik atau mencapai iterasi maksimum.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card 4: Comparison & Applications -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title"><i class="fas fa-balance-scale"></i> Perbandingan & Aplikasi</h2>
+                    <div class="card-actions">
+                        <button class="btn btn-primary" id="export-comparison">
+                            <i class="fas fa-camera"></i> Export
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="comparison-grid">
+                    <div class="comparison-card">
+                        <h3 class="comparison-title"><i class="fas fa-map-marker-alt"></i> SCKM</h3>
+                        <ul class="comparison-list">
+                            <li>Klastering dengan batasan spasial</li>
+                            <li>Cocok untuk data geospasial</li>
+                            <li>Hasil klaster bersifat kontinyu secara spasial</li>
+                            <li>Parameter utama: k, MinPts, ε</li>
+                            <li>Kompleksitas: O(n·k·iterasi)</li>
+                            <li>Tidak mempertimbangkan perubahan waktu</li>
+                        </ul>
+                        
+                        <h4 style="margin-top: 20px;">Aplikasi:</h4>
+                        <ul class="comparison-list">
+                            <li>Segmentasi citra satelit</li>
+                            <li>Pemetaan zona risiko bencana</li>
+                            <li>Analisis pola kriminalitas wilayah</li>
+                            <li>Perencanaan tata kota</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="comparison-card">
+                        <h3 class="comparison-title"><i class="fas fa-clock"></i> ST-SCKM</h3>
+                        <ul class="comparison-list">
+                            <li>Klastering dengan batasan spasial-temporal</li>
+                            <li>Cocok untuk data dinamis</li>
+                            <li>Dapat melacak evolusi klaster dari waktu</li>
+                            <li>Parameter tambahan: α (weight temporal)</li>
+                            <li>Kompleksitas: O(T·n·k·iterasi)</li>
+                            <li>Memerlukan data time-series</li>
+                        </ul>
+                        
+                        <h4 style="margin-top: 20px;">Aplikasi:</h4>
+                        <ul class="comparison-list">
+                            <li>Pelacakan penyebaran penyakit</li>
+                            <li>Analisis pola lalu lintas waktu nyata</li>
+                            <li>Pemantauan perubahan iklim regional</li>
+                            <li>Prediksi pergerakan kerumunan</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 25px; padding: 20px; background-color: #f0f7ff; border-radius: 10px;">
+                    <h3><i class="fas fa-chart-line"></i> Performa Algoritma</h3>
+                    <canvas id="performance-chart" height="150"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <footer>
+            <p>Visualisasi SCKM & ST-SCKM Advanced | Dikembangkan untuk Edukasi Algoritma Klastering Spasial-Temporal</p>
+            <p style="margin-top: 10px; color: var(--gray); font-size: 0.9rem;">
+                <i class="fas fa-info-circle"></i> Gunakan tombol Export untuk menyimpan visualisasi sebagai gambar berkualitas tinggi (PNG/JPEG)
+            </p>
+        </footer>
+    </div>
+    
+    <!-- Export Modal -->
+    <div class="export-modal" id="export-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fas fa-download"></i> Export Visualisasi</h3>
+                <button class="close-modal" id="close-modal">&times;</button>
+            </div>
+            
+            <p>Pilih format dan kualitas untuk ekspor gambar:</p>
+            
+            <div class="export-options">
+                <div class="export-option" data-format="png">
+                    <i class="fas fa-file-image"></i>
+                    <h4>PNG (High Quality)</h4>
+                    <p>Kualitas tertinggi, latar belakang transparan</p>
+                </div>
+                
+                <div class="export-option" data-format="jpg">
+                    <i class="fas fa-file-image"></i>
+                    <h4>JPEG (Compressed)</h4>
+                    <p>Ukuran file lebih kecil, kualitas baik</p>
+                </div>
+                
+                <div class="export-option" data-format="pdf">
+                    <i class="fas fa-file-pdf"></i>
+                    <h4>PDF (Vector)</h4>
+                    <p>Cocok untuk cetak dan presentasi</p>
+                </div>
+                
+                <div class="export-option" data-format="all">
+                    <i class="fas fa-file-archive"></i>
+                    <h4>All Formats</h4>
+                    <p>Ekspor ke semua format sekaligus</p>
+                </div>
+            </div>
+            
+            <div class="param-controls" style="margin-top: 20px;">
+                <div class="param-group">
+                    <div class="param-label">Kualitas: <span class="param-value" id="quality-value">90%</span></div>
+                    <input type="range" id="quality-slider" min="50" max="100" value="90" step="5">
+                </div>
+                
+                <div class="param-group">
+                    <div class="param-label">Skala: <span class="param-value" id="scale-value">2x</span></div>
+                    <input type="range" id="scale-slider" min="1" max="4" value="2" step="0.5">
+                </div>
+            </div>
+            
+            <div class="progress-container" id="export-progress" style="display: none;">
+                <div class="progress-bar" id="progress-bar"></div>
+            </div>
+            
+            <div style="margin-top: 20px; display: flex; justify-content: flex-end;">
+                <button class="btn btn-outline" id="cancel-export">Batal</button>
+                <button class="btn btn-primary" id="confirm-export" style="margin-left: 10px;">
+                    <span id="export-button-text">Export Sekarang</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentExportTarget = null;
+        let exportFormat = 'png';
+        let exportQuality = 0.9;
+        let exportScale = 2;
+        
+        // Initialize all visualizations
+        document.addEventListener('DOMContentLoaded', function() {
+            initSCKM();
+            initSTSCKM();
+            initPerformanceChart();
+            setupEventListeners();
+        });
+        
+        // SCKM Visualization
+        const sckmCanvas = document.getElementById('sckm-canvas');
+        const sckmCtx = sckmCanvas.getContext('2d');
+        let sckmPoints = [];
+        let sckmCentroids = [];
+        let sckmClusters = [];
+        let sckmStep = 0;
+        let sckmParams = {
+            k: 3,
+            minPts: 5,
+            epsilon: 120
+        };
+        
+        function initSCKM() {
+            sckmPoints = [];
+            sckmClusters = [];
+            sckmStep = 0;
+            
+            // Update parameters from sliders
+            sckmParams.k = parseInt(document.getElementById('k-slider').value);
+            sckmParams.minPts = parseInt(document.getElementById('minpts-slider').value);
+            sckmParams.epsilon = parseInt(document.getElementById('epsilon-slider').value);
+            
+            // Initialize clusters based on k value
+            for (let i = 0; i < sckmParams.k; i++) {
+                sckmClusters[i] = [];
+            }
+            
+            // Initialize centroids
+            sckmCentroids = [];
+            for (let i = 0; i < sckmParams.k; i++) {
+                const angle = (i / sckmParams.k) * Math.PI * 2;
+                const radius = 150;
+                sckmCentroids.push({
+                    x: 300 + Math.cos(angle) * radius,
+                    y: 200 + Math.sin(angle) * radius,
+                    color: '#1A2980',
+                    clusterId: i
+                });
+            }
+            
+            // Generate points
+            for (let i = 0; i < 80; i++) {
+                // Choose a random centroid to cluster around
+                const clusterIdx = Math.floor(Math.random() * sckmParams.k);
+                const centroid = sckmCentroids[clusterIdx];
+                
+                // Generate point around centroid
+                const angle = Math.random() * Math.PI * 2;
+                const distance = Math.random() * sckmParams.epsilon * 0.7;
+                
+                const x = centroid.x + Math.cos(angle) * distance;
+                const y = centroid.y + Math.sin(angle) * distance;
+                
+                // Determine point type based on distance and MinPts
+                let type, color;
+                const distToCentroid = Math.sqrt(
+                    Math.pow(x - centroid.x, 2) + 
+                    Math.pow(y - centroid.y, 2)
+                );
+                
+                if (distToCentroid < sckmParams.epsilon * 0.4) {
+                    type = 'core';
+                    color = '#FF6B6B';
+                } else if (distToCentroid < sckmParams.epsilon) {
+                    type = 'border';
+                    color = '#4ECDC4';
+                } else {
+                    type = 'noise';
+                    color = '#FFD166';
+                }
+                
+                // Add some noise points randomly
+                if (Math.random() < 0.15) {
+                    type = 'noise';
+                    color = '#FFD166';
+                    sckmPoints.push({
+                        x: Math.random() * 600,
+                        y: Math.random() * 400,
+                        originalCluster: clusterIdx,
+                        currentCluster: -1,
+                        type: type,
+                        color: color
+                    });
+                } else {
+                    sckmPoints.push({
+                        x: x,
+                        y: y,
+                        originalCluster: clusterIdx,
+                        currentCluster: -1,
+                        type: type,
+                        color: color
+                    });
+                }
+            }
+            
+            // Update step indicators
+            updateStepIndicators();
+            
+            drawSCKM();
+        }
+        
+        function drawSCKM() {
+            sckmCtx.clearRect(0, 0, sckmCanvas.width, sckmCanvas.height);
+            
+            // Draw spatial constraints (epsilon circles)
+            if (sckmStep >= 1) {
+                sckmCentroids.forEach(centroid => {
+                    sckmCtx.beginPath();
+                    sckmCtx.arc(centroid.x, centroid.y, sckmParams.epsilon, 0, Math.PI * 2);
+                    sckmCtx.strokeStyle = 'rgba(26, 41, 128, 0.15)';
+                    sckmCtx.lineWidth = 2;
+                    sckmCtx.setLineDash([5, 5]);
+                    sckmCtx.stroke();
+                    sckmCtx.setLineDash([]);
+                    
+                    // Draw epsilon label
+                    sckmCtx.fillStyle = 'rgba(26, 41, 128, 0.7)';
+                    sckmCtx.font = '12px Arial';
+                    sckmCtx.fillText(`ε = ${sckmParams.epsilon}`, centroid.x + sckmParams.epsilon + 5, centroid.y);
+                });
+            }
+            
+            // Draw points
+            sckmPoints.forEach(point => {
+                sckmCtx.beginPath();
+                sckmCtx.arc(point.x, point.y, 6, 0, Math.PI * 2);
+                sckmCtx.fillStyle = point.color;
+                sckmCtx.fill();
+                
+                // Add border for core points
+                if (point.type === 'core') {
+                    sckmCtx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+                    sckmCtx.lineWidth = 1.5;
+                    sckmCtx.stroke();
+                }
+                
+                // If point is assigned to a cluster, draw connection line
+                if (sckmStep >= 2 && point.currentCluster >= 0) {
+                    const centroid = sckmCentroids[point.currentCluster];
+                    sckmCtx.beginPath();
+                    sckmCtx.moveTo(point.x, point.y);
+                    sckmCtx.lineTo(centroid.x, centroid.y);
+                    sckmCtx.strokeStyle = 'rgba(26, 41, 128, 0.2)';
+                    sckmCtx.lineWidth = 1;
+                    sckmCtx.stroke();
+                }
+            });
+            
+            // Draw centroids
+            sckmCentroids.forEach(centroid => {
+                sckmCtx.beginPath();
+                sckmCtx.arc(centroid.x, centroid.y, 12, 0, Math.PI * 2);
+                sckmCtx.fillStyle = centroid.color;
+                sckmCtx.fill();
+                
+                // White border
+                sckmCtx.strokeStyle = 'white';
+                sckmCtx.lineWidth = 3;
+                sckmCtx.stroke();
+                
+                // Draw cluster number
+                sckmCtx.fillStyle = 'white';
+                sckmCtx.font = 'bold 14px Arial';
+                sckmCtx.textAlign = 'center';
+                sckmCtx.textBaseline = 'middle';
+                sckmCtx.fillText(centroid.clusterId + 1, centroid.x, centroid.y);
+                
+                // Reset text alignment
+                sckmCtx.textAlign = 'left';
+                sckmCtx.textBaseline = 'alphabetic';
+            });
+            
+            // Draw algorithm step info
+            sckmCtx.fillStyle = '#2d3748';
+            sckmCtx.font = 'bold 16px Arial';
+            sckmCtx.fillText(`SCKM - Step ${sckmStep + 1}/5`, 20, 30);
+            
+            const stepDescriptions = [
+                'Inisialisasi: Titik data dan centroid awal',
+                'Identifikasi Core Points (MinPts = ' + sckmParams.minPts + ')',
+                'Penugasan titik ke centroid terdekat dalam radius ε = ' + sckmParams.epsilon,
+                'Pembaruan posisi centroid',
+                'Konvergensi: Iterasi hingga stabil'
+            ];
+            
+            sckmCtx.fillStyle = '#718096';
+            sckmCtx.font = '14px Arial';
+            if (sckmStep < stepDescriptions.length) {
+                sckmCtx.fillText(stepDescriptions[sckmStep], 20, 55);
+            }
+            
+            // Draw parameter info
+            sckmCtx.fillStyle = '#1a2980';
+            sckmCtx.font = '12px Arial';
+            sckmCtx.fillText(`k = ${sckmParams.k} | MinPts = ${sckmParams.minPts} | ε = ${sckmParams.epsilon}`, 20, 380);
+        }
+        
+        function updateStepIndicators() {
+            for (let i = 1; i <= 4; i++) {
+                const indicator = document.getElementById(`step${i}`);
+                if (i <= sckmStep) {
+                    indicator.className = 'step-indicator completed';
+                } else if (i === sckmStep + 1) {
+                    indicator.className = 'step-indicator active';
+                } else {
+                    indicator.className = 'step-indicator';
+                }
+            }
+        }
+        
+        function stepSCKM() {
+            if (sckmStep < 4) {
+                sckmStep++;
+                
+                switch(sckmStep) {
+                    case 1:
+                        // Show core points identification
+                        break;
+                    case 2:
+                        // Assign points to centroids
+                        assignPointsToCentroids();
+                        break;
+                    case 3:
+                        // Update centroids
+                        updateCentroids();
+                        break;
+                    case 4:
+                        // Show convergence
+                        simulateConvergence();
+                        break;
+                }
+                
+                updateStepIndicators();
+                drawSCKM();
+            }
+        }
+        
+        function assignPointsToCentroids() {
+            sckmPoints.forEach(point => {
+                let minDist = Infinity;
+                let closestCentroid = -1;
+                
+                sckmCentroids.forEach((centroid, idx) => {
+                    const dist = Math.sqrt(
+                        Math.pow(point.x - centroid.x, 2) + 
+                        Math.pow(point.y - centroid.y, 2)
+                    );
+                    
+                    // Check if within spatial constraint (epsilon)
+                    if (dist < sckmParams.epsilon && dist < minDist) {
+                        minDist = dist;
+                        closestCentroid = idx;
+                    }
+                });
+                
+                point.currentCluster = closestCentroid;
+                
+                // Update point color based on assignment
+                if (closestCentroid >= 0) {
+                    const hue = (closestCentroid / sckmParams.k) * 360;
+                    point.color = `hsl(${hue}, 70%, 60%)`;
+                } else {
+                    point.color = '#FFD166'; // Noise points
+                }
+            });
+        }
+        
+        function updateCentroids() {
+            // Calculate new centroids
+            const clusterSums = Array(sckmParams.k).fill().map(() => ({x: 0, y: 0, count: 0}));
+            
+            sckmPoints.forEach(point => {
+                if (point.currentCluster >= 0) {
+                    clusterSums[point.currentCluster].x += point.x;
+                    clusterSums[point.currentCluster].y += point.y;
+                    clusterSums[point.currentCluster].count++;
+                }
+            });
+            
+            // Update centroids
+            clusterSums.forEach((sum, idx) => {
+                if (sum.count > 0) {
+                    sckmCentroids[idx].x = sum.x / sum.count;
+                    sckmCentroids[idx].y = sum.y / sum.count;
+                }
+            });
+        }
+        
+        function simulateConvergence() {
+            // Move centroids slightly to show convergence
+            sckmCentroids.forEach(centroid => {
+                centroid.x += (Math.random() * 10 - 5);
+                centroid.y += (Math.random() * 10 - 5);
+            });
+            
+            // Reassign some points to show convergence
+            assignPointsToCentroids();
+        }
+        
+        // ST-SCKM Visualization
+        const stCanvas = document.getElementById('st-canvas');
+        const stCtx = stCanvas.getContext('2d');
+        let stPoints = [];
+        let stCentroids = [];
+        let currentTime = 1;
+        let isAnimating = false;
+        
+        function initSTSCKM() {
+            stPoints = [];
+            stCentroids = [];
+            currentTime = 1;
+            
+            const k = 3;
+            const timeSteps = 3;
+            
+            // Initialize centroids for each time step
+            for (let t = 1; t <= timeSteps; t++) {
+                for (let i = 0; i < k; i++) {
+                    const baseX = 150 + i * 150;
+                    const baseY = 150 + (t - 1) * 50;
+                    
+                    stCentroids.push({
+                        x: baseX,
+                        y: baseY,
+                        time: t,
+                        clusterId: i,
+                        color: '#1A2980',
+                        originalX: baseX,
+                        originalY: baseY
+                    });
+                }
+            }
+            
+            // Generate points for each time step
+            for (let t = 1; t <= timeSteps; t++) {
+                for (let i = 0; i < k; i++) {
+                    const centroid = stCentroids.find(c => c.time === t && c.clusterId === i);
+                    
+                    for (let j = 0; j < 15; j++) {
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = Math.random() * 60 + 20;
+                        
+                        // Points drift over time
+                        const timeDrift = (t - 1) * 20;
+                        
+                        const x = centroid.x + Math.cos(angle) * distance + timeDrift;
+                        const y = centroid.y + Math.sin(angle) * distance;
+                        
+                        // Determine color based on time
+                        let color;
+                        if (t === 1) color = '#FF6B6B';
+                        else if (t === 2) color = '#4ECDC4';
+                        else color = '#FFD166';
+                        
+                        stPoints.push({
+                            x: x,
+                            y: y,
+                            time: t,
+                            clusterId: i,
+                            color: color,
+                            centroidX: centroid.x,
+                            centroidY: centroid.y
+                        });
+                    }
+                }
+            }
+            
+            updateSTStatistics();
+            drawSTSCKM();
+        }
+        
+        function drawSTSCKM() {
+            stCtx.clearRect(0, 0, stCanvas.width, stCanvas.height);
+            
+            // Draw time dimension visualization
+            stCtx.fillStyle = '#2d3748';
+            stCtx.font = 'bold 16px Arial';
+            stCtx.fillText(`ST-SCKM - Time Step t = ${currentTime}`, 20, 30);
+            
+            // Draw time axis
+            stCtx.beginPath();
+            stCtx.moveTo(50, 350);
+            stCtx.lineTo(550, 350);
+            stCtx.strokeStyle = '#718096';
+            stCtx.lineWidth = 2;
+            stCtx.stroke();
+            
+            // Draw time markers
+            for (let t = 1; t <= 3; t++) {
+                const x = 100 + (t - 1) * 150;
+                stCtx.beginPath();
+                stCtx.moveTo(x, 345);
+                stCtx.lineTo(x, 355);
+                stCtx.strokeStyle = '#718096';
+                stCtx.lineWidth = 2;
+                stCtx.stroke();
+                
+                stCtx.fillStyle = t === currentTime ? '#1a2980' : '#718096';
+                stCtx.font = 'bold 14px Arial';
+                stCtx.fillText(`t${t}`, x - 5, 370);
+                
+                // Highlight current time
+                if (t === currentTime) {
+                    stCtx.beginPath();
+                    stCtx.arc(x, 350, 8, 0, Math.PI * 2);
+                    stCtx.fillStyle = '#1a2980';
+                    stCtx.fill();
+                }
+            }
+            
+            // Draw points for current time
+            const currentPoints = stPoints.filter(p => p.time === currentTime);
+            currentPoints.forEach(point => {
+                stCtx.beginPath();
+                stCtx.arc(point.x, point.y, 5, 0, Math.PI * 2);
+                stCtx.fillStyle = point.color;
+                stCtx.fill();
+                
+                // Draw connection to centroid
+                stCtx.beginPath();
+                stCtx.moveTo(point.x, point.y);
+                stCtx.lineTo(point.centroidX, point.centroidY);
+                stCtx.strokeStyle = 'rgba(0, 0, 0, 0.1)';
+                stCtx.lineWidth = 1;
+                stCtx.stroke();
+            });
+            
+            // Draw centroids for current time
+            const currentCentroids = stCentroids.filter(c => c.time === currentTime);
+            currentCentroids.forEach(centroid => {
+                stCtx.beginPath();
+                stCtx.arc(centroid.x, centroid.y, 12, 0, Math.PI * 2);
+                stCtx.fillStyle = centroid.color;
+                stCtx.fill();
+                
+                // White border
+                stCtx.strokeStyle = 'white';
+                stCtx.lineWidth = 3;
+                stCtx.stroke();
+                
+                // Draw cluster number
+                stCtx.fillStyle = 'white';
+                stCtx.font = 'bold 14px Arial';
+                stCtx.textAlign = 'center';
+                stCtx.textBaseline = 'middle';
+                stCtx.fillText(centroid.clusterId + 1, centroid.x, centroid.y);
+                
+                // Reset text alignment
+                stCtx.textAlign = 'left';
+                stCtx.textBaseline = 'alphabetic';
+                
+                // Draw temporal connection if time > 1
+                if (currentTime > 1) {
+                    const prevCentroid = stCentroids.find(c => c.time === currentTime - 1 && c.clusterId === centroid.clusterId);
+                    if (prevCentroid) {
+                        stCtx.beginPath();
+                        stCtx.moveTo(prevCentroid.x, prevCentroid.y);
+                        stCtx.lineTo(centroid.x, centroid.y);
+                        stCtx.strokeStyle = 'rgba(26, 41, 128, 0.3)';
+                        stCtx.lineWidth = 2;
+                        stCtx.setLineDash([5, 3]);
+                        stCtx.stroke();
+                        stCtx.setLineDash([]);
+                    }
+                }
+            });
+            
+            // Draw spatio-temporal constraint
+            stCtx.beginPath();
+            currentCentroids.forEach(centroid => {
+                stCtx.moveTo(centroid.x + 80, centroid.y);
+                stCtx.arc(centroid.x, centroid.y, 80, 0, Math.PI * 2);
+            });
+            stCtx.strokeStyle = 'rgba(38, 208, 206, 0.2)';
+            stCtx.lineWidth = 2;
+            stCtx.setLineDash([5, 5]);
+            stCtx.stroke();
+            stCtx.setLineDash([]);
+            
+            // Draw legend for time
+            stCtx.fillStyle = '#2d3748';
+            stCtx.font = '12px Arial';
+            stCtx.fillText('Waktu: ', 20, 100);
+            
+            const timeColors = ['#FF6B6B', '#4ECDC4', '#FFD166'];
+            for (let t = 1; t <= 3; t++) {
+                stCtx.fillStyle = timeColors[t-1];
+                stCtx.fillRect(70 + (t-1)*60, 90, 15, 15);
+                stCtx.fillStyle = '#2d3748';
+                stCtx.font = '12px Arial';
+                stCtx.fillText(`t${t}`, 90 + (t-1)*60, 102);
+            }
+        }
+        
+        function updateTime(newTime) {
+            currentTime = newTime;
+            document.getElementById('time-value').textContent = newTime;
+            document.getElementById('time-slider').value = newTime;
+            
+            // Move points and centroids to show temporal evolution
+            stPoints.forEach(point => {
+                if (point.time === newTime) {
+                    // Reset to original position for simplicity
+                    const centroid = stCentroids.find(c => c.time === newTime && c.clusterId === point.clusterId);
+                    if (centroid) {
+                        const angle = Math.atan2(point.y - point.centroidY, point.x - point.centroidX);
+                        const distance = Math.sqrt(
+                            Math.pow(point.x - point.centroidX, 2) + 
+                            Math.pow(point.y - point.centroidY, 2)
+                        );
+                        
+                        point.x = centroid.x + Math.cos(angle) * distance;
+                        point.y = centroid.y + Math.sin(angle) * distance;
+                        point.centroidX = centroid.x;
+                        point.centroidY = centroid.y;
+                    }
+                }
+            });
+            
+            updateSTStatistics();
+            drawSTSCKM();
+        }
+        
+        function animateTime() {
+            if (isAnimating) return;
+            
+            isAnimating = true;
+            const animateButton = document.getElementById('animate-time');
+            animateButton.innerHTML = '<div class="loading"></div> Animating';
+            animateButton.disabled = true;
+            
+            let time = 1;
+            const interval = setInterval(() => {
+                updateTime(time);
+                time++;
+                
+                if (time > 3) {
+                    clearInterval(interval);
+                    isAnimating = false;
+                    animateButton.innerHTML = '<i class="fas fa-film"></i> Animate';
+                    animateButton.disabled = false;
+                }
+            }, 800);
+        }
+        
+        function updateSTStatistics() {
+            const currentPoints = stPoints.filter(p => p.time === currentTime).length;
+            const totalPoints = stPoints.length;
+            const convergence = Math.min(100, Math.floor((currentTime / 3) * 100));
+            
+            document.getElementById('st-points').textContent = currentPoints;
+            document.getElementById('st-clusters').textContent = 3;
+            document.getElementById('st-time').textContent = 3;
+            document.getElementById('st-convergence').textContent = `${convergence}%`;
+        }
+        
+        // Performance Chart
+        function initPerformanceChart() {
+            const ctx = document.getElementById('performance-chart').getContext('2d');
+            
+            // Sample data for algorithm performance
+            const data = {
+                labels: ['10', '100', '1000', '10000', '100000'],
+                datasets: [
+                    {
+                        label: 'K-Means',
+                        data: [5, 12, 85, 1200, 18000],
+                        borderColor: '#FF6B6B',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'SCKM',
+                        data: [8, 20, 150, 2500, 40000],
+                        borderColor: '#4ECDC4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    },
+                    {
+                        label: 'ST-SCKM',
+                        data: [15, 45, 450, 8000, 150000],
+                        borderColor: '#1A2980',
+                        backgroundColor: 'rgba(26, 41, 128, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }
+                ]
+            };
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Waktu Eksekusi vs Jumlah Data (ms)',
+                            font: {
+                                size: 14
+                            }
+                        },
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Jumlah Data Points'
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Waktu (ms)',
+                            },
+                            type: 'logarithmic'
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Export functionality
+        function setupEventListeners() {
+            // SCKM controls
+            document.getElementById('run-sckm').addEventListener('click', function() {
+                if (sckmStep < 4) {
+                    stepSCKM();
+                } else {
+                    // Restart from beginning
+                    sckmStep = 0;
+                    updateStepIndicators();
+                    initSCKM();
+                }
+            });
+            
+            document.getElementById('reset-sckm').addEventListener('click', function() {
+                sckmStep = 0;
+                updateStepIndicators();
+                initSCKM();
+            });
+            
+            // ST-SCKM controls
+            document.getElementById('run-st').addEventListener('click', function() {
+                // Run ST-SCKM algorithm steps
+                animateTime();
+            });
+            
+            document.getElementById('reset-st').addEventListener('click', function() {
+                initSTSCKM();
+            });
+            
+            document.getElementById('time-slider').addEventListener('input', function() {
+                updateTime(parseInt(this.value));
+            });
+            
+            document.getElementById('animate-time').addEventListener('click', animateTime);
+            
+            // Parameter sliders
+            document.getElementById('k-slider').addEventListener('input', function() {
+                document.getElementById('k-value').textContent = this.value;
+                initSCKM();
+            });
+            
+            document.getElementById('minpts-slider').addEventListener('input', function() {
+                document.getElementById('minpts-value').textContent = this.value;
+                initSCKM();
+            });
+            
+            document.getElementById('epsilon-slider').addEventListener('input', function() {
+                document.getElementById('epsilon-value').textContent = this.value;
+                initSCKM();
+            });
+            
+            // Export buttons
+            document.getElementById('export-sckm').addEventListener('click', function() {
+                showExportModal('sckm-canvas-container');
+            });
+            
+            document.getElementById('export-st').addEventListener('click', function() {
+                showExportModal('st-canvas-container');
+            });
+            
+            document.getElementById('export-formula').addEventListener('click', function() {
+                showExportModal(document.querySelector('.card:nth-child(3)'));
+            });
+            
+            document.getElementById('export-comparison').addEventListener('click', function() {
+                showExportModal(document.querySelector('.card:nth-child(4)'));
+            });
+            
+            // Export modal controls
+            document.getElementById('close-modal').addEventListener('click', hideExportModal);
+            document.getElementById('cancel-export').addEventListener('click', hideExportModal);
+            
+            document.getElementById('confirm-export').addEventListener('click', performExport);
+            
+            // Export options
+            document.querySelectorAll('.export-option').forEach(option => {
+                option.addEventListener('click', function() {
+                    exportFormat = this.getAttribute('data-format');
+                    
+                    // Update active state
+                    document.querySelectorAll('.export-option').forEach(opt => {
+                        opt.style.borderColor = 'transparent';
+                    });
+                    this.style.borderColor = '#1a2980';
+                });
+            });
+            
+            // Quality slider
+            document.getElementById('quality-slider').addEventListener('input', function() {
+                document.getElementById('quality-value').textContent = this.value + '%';
+                exportQuality = parseInt(this.value) / 100;
+            });
+            
+            // Scale slider
+            document.getElementById('scale-slider').addEventListener('input', function() {
+                document.getElementById('scale-value').textContent = this.value + 'x';
+                exportScale = parseFloat(this.value);
+            });
+        }
+        
+        function showExportModal(target) {
+            currentExportTarget = target;
+            document.getElementById('export-modal').classList.add('active');
+            
+            // Reset export options
+            document.querySelectorAll('.export-option').forEach(opt => {
+                opt.style.borderColor = 'transparent';
+            });
+            
+            // Set default to PNG
+            exportFormat = 'png';
+            document.querySelector('.export-option[data-format="png"]').style.borderColor = '#1a2980';
+        }
+        
+        function hideExportModal() {
+            document.getElementById('export-modal').classList.remove('active');
+            document.getElementById('export-progress').style.display = 'none';
+            document.getElementById('progress-bar').style.width = '0%';
+        }
+        
+        function performExport() {
+            const exportButton = document.getElementById('confirm-export');
+            const buttonText = document.getElementById('export-button-text');
+            const progressContainer = document.getElementById('export-progress');
+            const progressBar = document.getElementById('progress-bar');
+            
+            // Show progress
+            progressContainer.style.display = 'block';
+            exportButton.disabled = true;
+            buttonText.textContent = 'Exporting...';
+            
+            // Simulate progress
+            let progress = 0;
+            const progressInterval = setInterval(() => {
+                progress += 10;
+                progressBar.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(progressInterval);
+                    
+                    // Get the target element
+                    let element;
+                    if (typeof currentExportTarget === 'string') {
+                        element = document.getElementById(currentExportTarget);
+                    } else {
+                        element = currentExportTarget;
+                    }
+                    
+                    // Configure export options
+                    const options = {
+                        scale: exportScale,
+                        useCORS: true,
+                        backgroundColor: '#FFFFFF'
+                    };
+                    
+                    if (exportFormat === 'jpg') {
+                        options.backgroundColor = '#FFFFFF';
+                    }
+                    
+                    // Perform export based on format
+                    if (exportFormat === 'all') {
+                        // Export to all formats
+                        exportAsFormat(element, 'png', options);
+                        setTimeout(() => exportAsFormat(element, 'jpg', options), 500);
+                        setTimeout(() => exportAsFormat(element, 'pdf', options), 1000);
+                    } else {
+                        exportAsFormat(element, exportFormat, options);
+                    }
+                    
+                    // Reset UI
+                    setTimeout(() => {
+                        exportButton.disabled = false;
+                        buttonText.textContent = 'Export Sekarang';
+                        progressContainer.style.display = 'none';
+                        progressBar.style.width = '0%';
+                        hideExportModal();
+                        
+                        // Show success message
+                        showNotification('Export berhasil! Gambar telah disimpan.', 'success');
+                    }, 1500);
+                }
+            }, 50);
+        }
+        
+        function exportAsFormat(element, format, options) {
+            // Use html2canvas to capture the element
+            html2canvas(element, options).then(canvas => {
+                // Create a download link
+                const link = document.createElement('a');
+                
+                if (format === 'pdf') {
+                    // For PDF, we would typically use a PDF library
+                    // For simplicity, we'll just download as PNG and note that PDF would need additional processing
+                    link.download = `export-${Date.now()}.png`;
+                    link.href = canvas.toDataURL('image/png');
+                } else {
+                    const mimeType = format === 'jpg' ? 'image/jpeg' : 'image/png';
+                    link.download = `export-${Date.now()}.${format}`;
+                    link.href = canvas.toDataURL(mimeType, exportQuality);
+                }
+                
+                // Trigger download
+                link.click();
+            }).catch(error => {
+                console.error('Export error:', error);
+                showNotification('Error saat export: ' + error.message, 'error');
+            });
+        }
+        
+        function showNotification(message, type) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                background-color: ${type === 'success' ? '#4CAF50' : '#F44336'};
+                color: white;
+                border-radius: 8px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+                z-index: 10000;
+                font-weight: 600;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                max-width: 400px;
+                animation: slideIn 0.3s ease-out;
+            `;
+            
+            notification.innerHTML = `
+                <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
+                <span>${message}</span>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 5 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 5000);
+            
+            // Add CSS animations
+            if (!document.getElementById('notification-styles')) {
+                const style = document.createElement('style');
+                style.id = 'notification-styles';
+                style.textContent = `
+                    @keyframes slideIn {
+                        from { transform: translateX(100%); opacity: 0; }
+                        to { transform: translateX(0); opacity: 1; }
+                    }
+                    @keyframes slideOut {
+                        from { transform: translateX(0); opacity: 1; }
+                        to { transform: translateX(100%); opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+        }
+    </script>
+</body>
+</html>
